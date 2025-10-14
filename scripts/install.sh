@@ -25,9 +25,10 @@ apt install curl whiptail jq -y
 
 
 # --- Helper: get download urls for ViaVersion plugins ---
-get_Via_URL() {
-  PLUGIN=$1
-  local URL=$(curl -s https://api.github.com/repos/ViaVersion/$PLUGIN/releases/latest|jq -r ".assets[].browser_download_url")
+get_github_release() {
+  PROJECT=$1
+  SLUG=$2
+  local URL=$(curl -s https://api.github.com/repos/$PROJECT/$SLUG/releases/latest|jq -r ".assets[].browser_download_url")
   echo "$URL"
 }
 
@@ -41,11 +42,11 @@ mkdir -p "$PLUGINS_DIR"
 declare -A VELOCITY_PLUGINS=(
   ["LuckPerms"]="https://download.luckperms.net/latest/velocity"
   ["ViaVersion"]="https://hangarcdn.papermc.io/plugins/ViaVersion/ViaVersion/versions/*/VELOCITY/ViaVersion-*.jar"
-  ["ViaVersion"]=$(get_Via_URL "ViaVersion")
-  ["ViaBackwards"]=$(get_Via_URL "ViaBackwards")
-  ["ViaRewind"]=$(get_Via_URL "ViaRewind")
+  ["ViaVersion"]=$(get_github_release "ViaVersion" "ViaVersion")
+  ["ViaBackwards"]=$(get_github_release "ViaVersion" "ViaBackwards")
+  ["ViaRewind"]=$(get_github_release "ViaVersion" "ViaRewind")
   ["MiniMOTD"]="https://api.papermc.io/v2/projects/minimotd/versions/latest/builds/latest/downloads/MiniMOTD-Velocity.jar"
-  ["CommandAliases"]="https://github.com/VelocityPowered/CommandAliases/releases/latest/download/CommandAliases-Velocity.jar"
+  ["CommandAliases"]=$(get_github_release "VelocityPowered" "CommandAliases")
   ["GeyserMC"]="https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/velocity"
   ["Floodgate"]="https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/velocity"
 )
