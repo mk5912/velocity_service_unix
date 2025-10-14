@@ -13,7 +13,9 @@ URL="https://raw.githubusercontent.com/mk5912/velocity_service_unix/refs/head/ma
 
 ROOT_DIR="/etc/velocity"
 
-mkdir $ROOT_DIR
+if [ ! -d $ROOT_DIR ]; then
+  mkdir $ROOT_DIR
+fi
 
 wget -o /etc/velocity/update_velocity.sh $URL/update_velocity.sh
 
@@ -36,7 +38,9 @@ get_github_release() {
 # Requirements: whiptail, curl, jq (optional)
 
 PLUGINS_DIR="$ROOT_DIR/plugins"
-mkdir -p "$PLUGINS_DIR"
+if [ ! -d $PLUGINS_DIR ]; then
+  mkdir -p "$PLUGINS_DIR"
+fi
 
 # --- Velocity Plugin URLs ---
 declare -A VELOCITY_PLUGINS=(
