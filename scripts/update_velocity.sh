@@ -10,7 +10,7 @@ set -euo
 PROJECT="velocity"
 API_BASE="https://api.papermc.io/v2/projects/${PROJECT}"
 OUTPUT_FILE="velocity.jar"
-USER_AGENT="VelocityUpdater/1.0 (admin@example.com)"  # optional but polite
+USER_AGENT="Velocity_Service_Updater"  # optional but polite
 
 echo "🔍 Checking latest Velocity version..."
 

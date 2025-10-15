@@ -1,27 +1,36 @@
 #!/bash/bin
 
-set -euo pipefail
-
-# --- SystemD Checker ---
-if [ ! -d "/etc/systemd/system" ]; then
-  echo "Please install systemd for service management!"
-  exit 1
-fi
-
-# --- File System Setup
-URL="https://raw.githubusercontent.com/mk5912/velocity_service_unix/refs/head/main/scripts"
-
 ROOT_DIR="/etc/velocity"
 
-if [ ! -d $ROOT_DIR ]; then
-  mkdir $ROOT_DIR
+if [ ! -f "/etc/systemd/system/velocity.service" ]; then
+
+  # --- SystemD Checker ---
+  if [ ! -d "/etc/systemd/system" ]; then
+    echo "Please install systemd for service management!"
+    exit 1
+  fi
+
+  # --- File System Setup
+  echo "Setting up file system!"
+
+  URL="https://raw.githubusercontent.com/mk5912/velocity_service_unix/refs/head/main/scripts"
+
+  if [ ! -d $ROOT_DIR ]; then
+    mkdir $ROOT_DIR
+  fi
+
+  echo "Getting Velocity updater!"
+  wget -o /etc/velocity/update_velocity.sh "$URL/update_velocity.sh"
+
+  echo "Getting Velocity service file!"
+  wget -o /etc/systemd/system/velocity.service "$URL/velocity.service"
+
+  echo "Reloading services!"
+  systemctl daemon-reload
+
 fi
 
-wget -o /etc/velocity/update_velocity.sh $URL/update_velocity.sh
-
-wget -o /etc/systemd/system/velocity.service $URL/velocity.service
-
-systemctl daemon-reload
+echo "Installing dependancies!"
 
 apt install curl whiptail jq -y
 
@@ -30,7 +39,7 @@ apt install curl whiptail jq -y
 get_github_release() {
   PROJECT=$1
   SLUG=$2
-  local URL=$(curl -s https://api.github.com/repos/$PROJECT/$SLUG/releases/latest|jq -r ".assets[].browser_download_url")
+  local URL=$(curl -s -H "User-Agent: Velocity_Service_Installer" "https://api.github.com/repos/$PROJECT/$SLUG/releases/latest"|jq -r ".assets[].browser_download_url")
   echo "$URL"
 }
 
@@ -38,17 +47,17 @@ get_github_release() {
 # Requirements: whiptail, curl, jq (optional)
 
 PLUGINS_DIR="$ROOT_DIR/plugins"
+
 if [ ! -d $PLUGINS_DIR ]; then
   mkdir -p "$PLUGINS_DIR"
 fi
 
 # --- Velocity Plugin URLs ---
 declare -A VELOCITY_PLUGINS=(
-  ["LuckPerms"]="https://download.luckperms.net/latest/velocity"
-  ["ViaVersion"]="https://hangarcdn.papermc.io/plugins/ViaVersion/ViaVersion/versions/*/VELOCITY/ViaVersion-*.jar"
   ["ViaVersion"]=$(get_github_release "ViaVersion" "ViaVersion")
   ["ViaBackwards"]=$(get_github_release "ViaVersion" "ViaBackwards")
   ["ViaRewind"]=$(get_github_release "ViaVersion" "ViaRewind")
+  ["LuckPerms"]="https://download.luckperms.net/latest/velocity"
   ["MiniMOTD"]="https://api.papermc.io/v2/projects/minimotd/versions/latest/builds/latest/downloads/MiniMOTD-Velocity.jar"
   ["CommandAliases"]=$(get_github_release "VelocityPowered" "CommandAliases")
   ["GeyserMC"]="https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/velocity"
@@ -81,12 +90,13 @@ if ! whiptail --title "Confirm Installation" \
   exit 0
 fi
 
+read -r -a PLUGINS <<< "${CHOICES//\"/}"
+
 # --- Step 3: Download with progress bar ---
 {
   COUNT=0
   TOTAL=$(echo "$CHOICES" | wc -w)
-
-  for plugin in ${CHOICES//\"/}; do
+  for plugin in ${PLUGINS[@]}; do
     ((COUNT++))
     echo "XXX"
     echo "$(( (COUNT - 1) * 100 / TOTAL ))"
@@ -96,9 +106,9 @@ fi
     URL="${VELOCITY_PLUGINS[$plugin]}"
 
     # Expand wildcard if present in URL
-    if [[ "$URL" == *"*"* ]]; then
-      URL=$(curl -s -L "${URL/\*/}" | grep -Eo "https?://[^ \"']+${plugin}[^ \"']+jar" | head -n1 || true)
-    fi
+    # if [[ "$URL" == *"*"* ]]; then
+    #   URL=$(curl -s -L "${URL/\*/}" | grep -Eo "https?://[^ \"']+${plugin}[^ \"']+jar" | head -n1 || true)
+    # fi
 
     curl -L -s -o "${PLUGINS_DIR}/${plugin}.jar" "$URL"
 
@@ -109,10 +119,16 @@ fi
   echo "XXX"
 } | whiptail --title "Installing Plugins" --gauge "Preparing downloads..." 8 70 0
 
-clear
 echo "✨ All done! Velocity plugins installed in '${PLUGINS_DIR}/'."
 
+if [ ! "$(systemctl show -p LoadState --value velocity)" = "loaded" ]; then
+  echo "Starting the Velocity service!"
 
-systemctl enable velocity
+  systemctl enable velocity
 
-systemctl start velocity
+  systemctl start velocity
+else
+  echo "Restarting the Velocity service!"
+
+  systemctl restart velocity
+fi
