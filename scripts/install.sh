@@ -12,7 +12,12 @@ if [ ! -f "/etc/systemd/system/velocity.service" ]; then
     exit 1
   fi
 
-  # --- File System Setup
+  # --- Installing dependencies required for the rest of the script ---
+  echo "Installing dependancies!"
+
+  apt wget install curl whiptail jq -y
+
+  # --- File System Setup ---
   echo "Setting up file system!"
 
   URL="https://raw.githubusercontent.com/mk5912/velocity_service_unix/refs/head/main/scripts"
@@ -31,11 +36,6 @@ if [ ! -f "/etc/systemd/system/velocity.service" ]; then
   systemctl daemon-reload
 
 fi
-
-echo "Installing dependancies!"
-
-apt install curl whiptail jq -y
-
 
 # --- Helper: get download urls for ViaVersion plugins ---
 get_github_release() {
