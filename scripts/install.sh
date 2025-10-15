@@ -1,4 +1,6 @@
-#!/bash/bin
+#!/usr/bin/env bash
+
+set -euo pipefail
 
 ROOT_DIR="/etc/velocity"
 
@@ -20,10 +22,10 @@ if [ ! -f "/etc/systemd/system/velocity.service" ]; then
   fi
 
   echo "Getting Velocity updater!"
-  wget -o /etc/velocity/update_velocity.sh "$URL/update_velocity.sh"
+  wget -o /etc/velocity/update_velocity.sh $URL/update_velocity.sh
 
   echo "Getting Velocity service file!"
-  wget -o /etc/systemd/system/velocity.service "$URL/velocity.service"
+  wget -o /etc/systemd/system/velocity.service $URL/velocity.service
 
   echo "Reloading services!"
   systemctl daemon-reload
@@ -96,6 +98,9 @@ read -r -a PLUGINS <<< "${CHOICES//\"/}"
 {
   COUNT=0
   TOTAL=$(echo "$CHOICES" | wc -w)
+
+  set +e
+
   for plugin in ${PLUGINS[@]}; do
     ((COUNT++))
     echo "XXX"
@@ -113,6 +118,9 @@ read -r -a PLUGINS <<< "${CHOICES//\"/}"
     curl -L -s -o "${PLUGINS_DIR}/${plugin}.jar" "$URL"
 
   done
+
+  set -e
+
   echo "XXX"
   echo "100"
   echo "✅ Installation complete! Plugins saved in '${PLUGINS_DIR}/'."
