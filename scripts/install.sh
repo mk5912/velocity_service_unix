@@ -15,22 +15,25 @@ if [ ! -f "/etc/systemd/system/velocity.service" ]; then
   # --- Installing dependencies required for the rest of the script ---
   echo "Installing dependancies!"
 
-  apt install wget curl whiptail jq -y
+  apt install curl whiptail jq -y
 
   # --- File System Setup ---
   echo "Setting up file system!"
 
-  URL="https://raw.githubusercontent.com/mk5912/velocity_service_unix/refs/head/main/scripts"
+  URL="https://raw.githubusercontent.com/mk5912/velocity_service_unix/refs/heads/main/scripts"
+
 
   if [ ! -d $ROOT_DIR ]; then
     mkdir $ROOT_DIR
   fi
 
   echo "Getting Velocity updater!"
-  wget -o /etc/velocity/update_velocity.sh $URL/update_velocity.sh
+  curl "$URL/update_velocity.sh">"/etc/velocity/update_velocity.sh"
+
+  chmod +x "/etc/velocity/update_velocity.sh"
 
   echo "Getting Velocity service file!"
-  wget -o /etc/systemd/system/velocity.service $URL/velocity.service
+  curl "$URL/velocity.service">"/etc/systemd/system/velocity.service"
 
   echo "Reloading services!"
   systemctl daemon-reload
@@ -129,7 +132,7 @@ read -r -a PLUGINS <<< "${CHOICES//\"/}"
 
 echo "✨ All done! Velocity plugins installed in '${PLUGINS_DIR}/'."
 
-if [ ! "$(systemctl show -p LoadState --value velocity)" = "loaded" ]; then
+if [ ! "$(systemctl show -p ActiveState --value velocity)" = "active" ]; then
   echo "Starting the Velocity service!"
 
   systemctl enable velocity
