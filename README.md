@@ -11,7 +11,7 @@ efficiently, designed for scalability and stability. This setup service has been
 Run the below command
 
    ```
-   curl -fsSL https://raw.githubusercontent.com/mk5912/velocity_service_unix/refs/heads/main/scripts/install.sh | sudo sh
+   curl -fsSL https://raw.githubusercontent.com/mk5912/velocity_service_unix/refs/heads/main/scripts/install.sh | sudo bash
    ```
   
 
