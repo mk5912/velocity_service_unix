@@ -21,9 +21,9 @@ Run the below command:
    ``` 
    wget https://raw.githubusercontent.com/mk5912/velocity_service_unix/refs/heads/main/scripts/install.sh
    
-   bash install.sh
-   
    sudo chmod +x install.sh
+   
+   ./install.sh||bash install.sh
   ```
 
   
