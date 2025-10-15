@@ -15,7 +15,7 @@ if [ ! -f "/etc/systemd/system/velocity.service" ]; then
   # --- Installing dependencies required for the rest of the script ---
   echo "Installing dependancies!"
 
-  apt wget install curl whiptail jq -y
+  apt install wget curl whiptail jq -y
 
   # --- File System Setup ---
   echo "Setting up file system!"
