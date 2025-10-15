@@ -16,15 +16,19 @@ Run the below command
   
 
 ### Method 2
-Run the below command:   
+Run the below commands:   
 
    ``` 
    wget https://raw.githubusercontent.com/mk5912/velocity_service_unix/refs/heads/main/scripts/install.sh
-   
+   ```
+then
+   ```
    sudo chmod +x install.sh
-   
+   ```
+and finish with
+   ```
    ./install.sh||bash install.sh
-  ```
+   ```
 
   
 ## Contributing
