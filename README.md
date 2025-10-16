@@ -2,7 +2,7 @@
 A Unix systemd service setup for Velocity Minecraft proxy.
 
 Velocity is a high-performance proxy server for Minecraft that allows for multiple Java Minecraft servers to be connected and managed 
-efficiently, designed for scalability and stability. This setup service has been designed to simplify setting up the reverse proxy.
+efficiently, designed for scalability and stability. This setup service has been designed to simplify the installation and running of the proxy with the addition of a (small) list of optional plugins.
 
 
 ## Installation
