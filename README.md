@@ -1,5 +1,6 @@
 # Branch description
 This "DEV" branch is for testing new/ updated features and may not work reliably!
+If swapping from the main branch to this Dev branch, please check the uninstall section below.
 
 # velocity_service_unix
 A Unix systemd service setup for Velocity Minecraft proxy.
@@ -33,6 +34,21 @@ and finish with
    ./install.sh||bash install.sh
    ```
 
+## Uninstall
+To uninstall this service you must run the below commands either as root or with sudo access, the commands must be run in order.
+### WARNING running these commands will completely remove the velocity server and it's files, should you wish to keep any config file please navigate the file system to remove only what you don't want.
+
+   ```
+   systemctl stop velocity
+   ```
+then
+   ```
+   systemctl disable velocity
+   ```
+and finally
+   ```
+   rm -r /etc/velocity /etc/systemd/system/velocity.service
+   ```
   
 ## Contributing
 
