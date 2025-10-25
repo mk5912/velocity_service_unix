@@ -15,12 +15,6 @@ get_arch() {
   echo $arch
 }
 
-# --- Install dasel if not already installed ---
-if [ -f "/usr/local/bin/dasel" ]; then
-  curl -sSL "https://github.com/TomWright/dasel/releases/latest/download/dasel_linux_$(get_arch)" -o "/usr/local/bin/dasel"
-  chmod a+x "/usr/local/bin/dasel"
-fi
-
 ROOT_DIR="/etc/velocity"
 
 if [ ! -f "/etc/systemd/system/velocity.service" ]; then
@@ -58,6 +52,12 @@ if [ ! -f "/etc/systemd/system/velocity.service" ]; then
   echo "Reloading services!"
   systemctl daemon-reload
 
+fi
+
+# --- Install dasel if not already installed ---
+if [ ! -f "/usr/local/bin/dasel" ]; then
+  curl -sSL "https://github.com/TomWright/dasel/releases/latest/download/dasel_linux_$(get_arch)" -o "/usr/local/bin/dasel"
+  chmod a+x "/usr/local/bin/dasel"
 fi
 
 # --- Helper: get download urls for ViaVersion plugins ---
