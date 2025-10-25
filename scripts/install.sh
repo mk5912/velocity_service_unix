@@ -2,6 +2,25 @@
 
 set -euo pipefail
 
+config="/etc/velocity/velocity.toml"
+
+# --- Get architecture ---
+get_arch() {
+  arch=$(uname -m)
+  if [ [ "$arch" = "aarch64" ] || [ "$arch" = "arm64" ] ]; then
+    arch=arm64
+  elif [ "$arch" = "x86_64" ]; then
+    arch=amd64
+  fi
+  echo $arch
+}
+
+# --- Install dasel if not already installed ---
+if [ -f "/usr/local/bin/dasel" ]; then
+  curl -sSL "https://github.com/TomWright/dasel/releases/latest/download/dasel_linux_$(get_arch)" -o "/usr/local/bin/dasel"
+  chmod a+x "/usr/local/bin/dasel"
+fi
+
 ROOT_DIR="/etc/velocity"
 
 if [ ! -f "/etc/systemd/system/velocity.service" ]; then
@@ -17,10 +36,11 @@ if [ ! -f "/etc/systemd/system/velocity.service" ]; then
 
   apt install curl whiptail jq -y
 
+
   # --- File System Setup ---
   echo "Setting up file system!"
 
-  URL="https://raw.githubusercontent.com/mk5912/velocity_service_unix/refs/heads/main/scripts"
+  URL="https://raw.githubusercontent.com/mk5912/velocity_service_unix/refs/heads/DEV/scripts"
 
 
   if [ ! -d $ROOT_DIR ]; then
@@ -46,6 +66,15 @@ get_github_release() {
   SLUG=$2
   local URL=$(curl -s -H "User-Agent: Velocity_Service_Installer" "https://api.github.com/repos/$PROJECT/$SLUG/releases/latest"|jq -r ".assets[].browser_download_url")
   echo "$URL"
+}
+
+# --- TOML config editor ---
+toml_write() {
+  file=$1
+  type=$2
+  selector=$3
+  value=$4
+  dasel put -t $type -v "$value" -f "$file" -r toml "$selector"
 }
 
 # Velocity Proxy Plugin Installer Wizard with progress bar
@@ -113,11 +142,6 @@ read -r -a PLUGINS <<< "${CHOICES//\"/}"
 
     URL="${VELOCITY_PLUGINS[$plugin]}"
 
-    # Expand wildcard if present in URL
-    # if [[ "$URL" == *"*"* ]]; then
-    #   URL=$(curl -s -L "${URL/\*/}" | grep -Eo "https?://[^ \"']+${plugin}[^ \"']+jar" | head -n1 || true)
-    # fi
-
     curl -L -s -o "${PLUGINS_DIR}/${plugin}.jar" "$URL"
 
   done
@@ -130,8 +154,6 @@ read -r -a PLUGINS <<< "${CHOICES//\"/}"
   echo "XXX"
 } | whiptail --title "Installing Plugins" --gauge "Preparing downloads..." 8 70 0
 
-echo "✨ All done! Velocity plugins installed in '${PLUGINS_DIR}/'."
-
 if [ ! "$(systemctl show -p ActiveState --value velocity)" = "active" ]; then
   echo "Starting the Velocity service!"
 
@@ -141,5 +163,20 @@ if [ ! "$(systemctl show -p ActiveState --value velocity)" = "active" ]; then
 else
   echo "Restarting the Velocity service!"
 
+  systemctl restart velocity
+fi
+
+while (whiptail --title "Velocity Setup" --yesno "Add A New Local Server Host?" 10 30); do
+  name=$(whiptail --inputbox "Server Name (i.e. Survival)" 8 39 --title "New Server" 3>&1 1>&2 2>&3)
+  ip=$(whiptail --inputbox "Server Local IP Address And Port (xxx.yyy.zzz.qqq:ppppp)" 8 39 --title "New Server" 3>&1 1>&2 2>&3)
+  fqdn=$(whiptail --inputbox "Server FQDN (i.e. mc.example.com):" 8 39 --title "New Server" 3>&1 1>&2 2>&3)
+  toml_write "$config" string "servers.$name" "$ip"
+  toml_write "$config" array "forced-hosts.$fqdn" "$name"
+  new_server=1
+done
+
+echo "✅ Setup complete! For manual updates to the server configuration, please edit $config!"
+
+if [ "$new_server" = "1" ]; then
   systemctl restart velocity
 fi

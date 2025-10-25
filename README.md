@@ -1,3 +1,6 @@
+# Branch description
+This "DEV" branch is for testing new/ updated features and may not work reliably!
+
 # velocity_service_unix
 A Unix systemd service setup for Velocity Minecraft proxy.
 
@@ -11,7 +14,7 @@ efficiently, designed for scalability and stability. This setup service has been
 Run the below command
 
    ```
-   curl https://raw.githubusercontent.com/mk5912/velocity_service_unix/refs/heads/main/scripts/install.sh | sudo bash
+   curl https://raw.githubusercontent.com/mk5912/velocity_service_unix/refs/heads/DEV/scripts/install.sh | sudo bash
    ```
   
 
@@ -19,7 +22,7 @@ Run the below command
 Run the below commands:   
 
    ``` 
-   wget https://raw.githubusercontent.com/mk5912/velocity_service_unix/refs/heads/main/scripts/install.sh
+   wget https://raw.githubusercontent.com/mk5912/velocity_service_unix/refs/heads/DEV/scripts/install.sh
    ```
 then
    ```
