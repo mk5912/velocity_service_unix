@@ -31,7 +31,7 @@ then
    ```
 and finish with
    ```
-   ./install.sh||bash install.sh
+   sudo ./install.sh||sudo bash install.sh
    ```
 
 ## Uninstall
