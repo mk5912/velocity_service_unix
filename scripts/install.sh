@@ -172,7 +172,7 @@ else
   systemctl restart velocity
 fi
 
-while (whiptail --title "Velocity Setup" --yesno "Add A New Local Server Host?" 10 30); do
+while {whiptail --title "Velocity Setup" --yesno "Add A New Local Server Host?" 10 30}; do
   name=$(whiptail --inputbox "Server Name (i.e. Survival)" 8 39 --title "New Server" 3>&1 1>&2 2>&3)
   ip=$(whiptail --inputbox "Server Local IP Address And Port (xxx.yyy.zzz.qqq:ppppp)" 8 39 --title "New Server" 3>&1 1>&2 2>&3)
   fqdn=$(whiptail --inputbox "Server FQDN (i.e. mc.example.com):" 8 39 --title "New Server" 3>&1 1>&2 2>&3)
