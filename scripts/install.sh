@@ -183,6 +183,6 @@ done
 
 echo "✅ Setup complete! For manual updates to the server configuration, please edit $config!"
 
-if [ "$new_server" = "1" ]; then
+if [ "${new_server:-0}" = "1" ]; then
   systemctl restart velocity
 fi
