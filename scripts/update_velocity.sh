@@ -7,8 +7,7 @@
 
 set -euo
 
-PROJECT="velocity"
-API_BASE="https://api.papermc.io/v2/projects/${PROJECT}"
+API_BASE="https://api.papermc.io/v2/projects/velocity"
 OUTPUT_FILE="velocity.jar"
 USER_AGENT="Velocity_Service_Updater"  # optional but polite
 
