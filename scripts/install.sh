@@ -29,7 +29,7 @@ if [ ! -f "/etc/systemd/system/velocity.service" ]; then
   echo "Installing dependancies!"
 
   apt install curl whiptail jq -y
-
+  (apt install openjdk-21 -y)||(apt install extrepo -y&&extrepo enable zulu-openjdk&&apt update&&apt install zulu21-jdk)||echo "Java Install Failed With Error: $?"&&exit 15
 
   # --- File System Setup ---
   echo "Setting up file system!"
@@ -42,7 +42,7 @@ if [ ! -f "/etc/systemd/system/velocity.service" ]; then
   fi
 
   echo "Getting Velocity updater!"
-  curl "$URL/update_velocity.sh">"/etc/velocity/update_velocity.sh"
+  curl "$URL/update_velocity.sh">"$ROOT_DIR/update_velocity.sh"
 
   chmod +x "/etc/velocity/update_velocity.sh"
 
@@ -68,7 +68,7 @@ get_github_release() {
   echo "$URL"
 }
 
-# --- TOML config editor (write only) ---
+# --- TOML config editor ---
 toml_write() {
   file=$1
   type=$2
@@ -80,7 +80,7 @@ toml_write() {
 toml_rm() {
   file=$1
   selector=$2
-  dasel delete -f "$config" -r tonl "$selector"
+  dasel delete -f "$file" -r toml "$selector"
 }
 
 # Velocity Proxy Plugin Installer Wizard with progress bar
@@ -172,12 +172,12 @@ else
   systemctl restart velocity
 fi
 
-while {whiptail --title "Velocity Setup" --yesno "Add A New Local Server Host?" 10 30}; do
+while whiptail --title "Velocity Setup" --yesno "Add A New Local Server Host?" 10 30; do
   name=$(whiptail --inputbox "Server Name (i.e. Survival)" 8 39 --title "New Server" 3>&1 1>&2 2>&3)
   ip=$(whiptail --inputbox "Server Local IP Address And Port (xxx.yyy.zzz.qqq:ppppp)" 8 39 --title "New Server" 3>&1 1>&2 2>&3)
   fqdn=$(whiptail --inputbox "Server FQDN (i.e. mc.example.com):" 8 39 --title "New Server" 3>&1 1>&2 2>&3)
-  toml_write "$config" string "servers.$name" "'$ip'"
-  toml_write "$config" array "forced-hosts.'$fqdn'" "['$name']"
+  toml_write "$config" string "servers.$name" "$ip"
+  toml_write "$config" array "forced-hosts.'$fqdn'" "$name"
   new_server=1
 done
 
