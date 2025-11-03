@@ -2,6 +2,7 @@
 
 set -euo pipefail
 
+MODULES_URL="https://raw.githubusercontent.com/mk5912/modules/refs/heads/tomle_edit"
 config="/etc/velocity/velocity.toml"
 
 # --- Get architecture ---
@@ -59,6 +60,8 @@ if [ ! -f "/usr/local/bin/dasel" ]; then
   curl -sSL "https://github.com/TomWright/dasel/releases/latest/download/dasel_linux_$(get_arch)" -o "/usr/local/bin/dasel"
   chmod a+x "/usr/local/bin/dasel"
 fi
+
+source <(curl -sSL "$MODULES_URL/toml_edit")
 
 # --- Helper: get download urls for ViaVersion plugins ---
 get_github_release() {
@@ -176,8 +179,8 @@ while whiptail --title "Velocity Setup" --yesno "Add A New Local Server Host?" 1
   name=$(whiptail --inputbox "Server Name (i.e. Survival)" 8 39 --title "New Server" 3>&1 1>&2 2>&3)
   ip=$(whiptail --inputbox "Server Local IP Address And Port (xxx.yyy.zzz.qqq:ppppp)" 8 39 --title "New Server" 3>&1 1>&2 2>&3)
   fqdn=$(whiptail --inputbox "Server FQDN (i.e. mc.example.com):" 8 39 --title "New Server" 3>&1 1>&2 2>&3)
-  toml_write "$config" string "servers.$name" "$ip"
-  toml_write "$config" array "forced-hosts.'$fqdn'" "$name"
+  toml_edit "$config" set "servers.$name" string "$ip"
+  toml_edit "$config" set "forced-hosts.'${fqdn/./\\./}'" array "$name"
   new_server=1
 done
 
