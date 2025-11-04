@@ -202,7 +202,7 @@ done
 
 echo "✅ Setup complete! For manual updates to the server configuration, please edit $config!"
 
-if [ "${#servers[@]}" = "1" ]; then
+if [ "${#servers[@]}" -gt "0" ]; then
   if whiptail --title "Set Default Host?" --yesno "Do you want to set a new default host?" 10 30; then
     toml_edit "$config" set "servers.try" array "${whiptail --title "Set Default Host?" --radiolist "Choose a default host:" 18 70 "$(( ${#servers[@]} / 3 ))" "${servers[@]}" 3>&1 1>&2 2>&3}"
   systemctl restart velocity
