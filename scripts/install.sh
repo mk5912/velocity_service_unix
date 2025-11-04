@@ -2,7 +2,6 @@
 
 set -euo pipefail
 
-MODULES_URL="https://raw.githubusercontent.com/mk5912/modules/refs/heads/tomle_edit"
 config="/etc/velocity/velocity.toml"
 
 # --- Get architecture ---
@@ -61,7 +60,6 @@ if [ ! -f "/usr/local/bin/dasel" ]; then
   chmod a+x "/usr/local/bin/dasel"
 fi
 
-source <(curl -sSL "$MODULES_URL/toml_edit")
 
 # --- Helper: get download urls for ViaVersion plugins ---
 get_github_release() {
@@ -72,18 +70,34 @@ get_github_release() {
 }
 
 # --- TOML config editor ---
-toml_write() {
-  file=$1
-  type=$2
-  selector=$3
-  value=$4
-  dasel put -t $type -v "$value" -f "$file" -r toml "$selector"
-}
+toml_edit() {
 
-toml_rm() {
-  file=$1
-  selector=$2
-  dasel delete -f "$file" -r toml "$selector"
+  set +u
+
+  local file=$1 action=$2 selector=$3 type=$4 value=$5
+
+  case "$action" in
+    "set")
+      if [ "$type" = "array" ]; then
+        dasel put -t yaml -f "$file" -w toml -s "$selector" -v "[$value]"
+      else
+        dasel put -t "$type" -f "$file" -w toml -s "$selector" -v "$value"
+      fi
+      ;;
+    "clear")
+      if [ "$type" = "array" ]; then
+        dasel put -t yaml -f "$file" -w toml -s "$selector" -v "[]"
+      else
+        dasel put -t "$type" -f "$file" -w toml -s "$selector" -v ""
+      fi
+      ;;
+    "delete")
+      dasel delete -f "$file" -w toml -s "$selector"
+      ;;
+  esac
+
+  set -u
+
 }
 
 # Velocity Proxy Plugin Installer Wizard with progress bar
@@ -175,17 +189,21 @@ else
   systemctl restart velocity
 fi
 
+servers=()
+
 while whiptail --title "Velocity Setup" --yesno "Add A New Local Server Host?" 10 30; do
   name=$(whiptail --inputbox "Server Name (i.e. Survival)" 8 39 --title "New Server" 3>&1 1>&2 2>&3)
   ip=$(whiptail --inputbox "Server Local IP Address And Port (xxx.yyy.zzz.qqq:ppppp)" 8 39 --title "New Server" 3>&1 1>&2 2>&3)
   fqdn=$(whiptail --inputbox "Server FQDN (i.e. mc.example.com):" 8 39 --title "New Server" 3>&1 1>&2 2>&3)
   toml_edit "$config" set "servers.$name" string "$ip"
   toml_edit "$config" set "forced-hosts.'${fqdn/./\\./}'" array "$name"
-  new_server=1
+  servers+=("$name" "$fqdn" "OFF")
 done
 
 echo "✅ Setup complete! For manual updates to the server configuration, please edit $config!"
 
-if [ "${new_server:-0}" = "1" ]; then
+if [ "${#servers[@]}" = "1" ]; then
+  if whiptail --title "Set Default Host?" --yesno "Do you want to set a new default host?" 10 30; then
+    toml_edit "$config" set "servers.try" array "${whiptail --title "Set Default Host?" --radiolist "Choose a default host:" 18 70 "$(( ${#servers[@]} / 3 ))" "${servers[@]}" 3>&1 1>&2 2>&3}"
   systemctl restart velocity
 fi
