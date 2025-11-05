@@ -2,8 +2,6 @@
 
 set -euo pipefail
 
-config="/etc/velocity/velocity.toml"
-
 # --- Get architecture ---
 get_arch() {
   arch=$(uname -m)
@@ -17,10 +15,16 @@ get_arch() {
 
 ROOT_DIR="/etc/velocity"
 
-if [ ! -f "/etc/systemd/system/velocity.service" ]; then
+SYSD_DIR="/etc/systemd/system"
+
+BIN_DIR="/usr/local/bin"
+
+config="$ROOT_DIR/velocity.toml"
+
+if [ ! -f "$SYSD_DIR/velocity.service" ]; then
 
   # --- SystemD Checker ---
-  if [ ! -d "/etc/systemd/system" ]; then
+  if [ ! -d "$SYSD_DIR" ]; then
     echo "Please install systemd for service management!"
     exit 1
   fi
@@ -44,10 +48,10 @@ if [ ! -f "/etc/systemd/system/velocity.service" ]; then
   echo "Getting Velocity updater!"
   curl "$URL/update_velocity.sh">"$ROOT_DIR/update_velocity.sh"
 
-  chmod +x "/etc/velocity/update_velocity.sh"
+  chmod +x "$ROOT_DIR/update_velocity.sh"
 
   echo "Getting Velocity service file!"
-  curl "$URL/velocity.service">"/etc/systemd/system/velocity.service"
+  curl "$URL/velocity.service">"$SYSD_DIR/velocity.service"
 
   echo "Reloading services!"
   systemctl daemon-reload
@@ -55,9 +59,9 @@ if [ ! -f "/etc/systemd/system/velocity.service" ]; then
 fi
 
 # --- Install dasel if not already installed ---
-if [ ! -f "/usr/local/bin/dasel" ]; then
-  curl -sSL "https://github.com/TomWright/dasel/releases/latest/download/dasel_linux_$(get_arch)" -o "/usr/local/bin/dasel"
-  chmod a+x "/usr/local/bin/dasel"
+if [ ! -f "$BIN_DIR/dasel" ]; then
+  curl -sSL "https://github.com/TomWright/dasel/releases/latest/download/dasel_linux_$(get_arch)" -o "$BIN_DIR/dasel"
+  chmod a+x "$BIN_DIR/dasel"
 fi
 
 
@@ -196,7 +200,7 @@ while whiptail --title "Velocity Setup" --yesno "Add A New Local Server Host?" 1
   ip=$(whiptail --inputbox "Server Local IP Address And Port (xxx.yyy.zzz.qqq:ppppp)" 8 39 --title "New Server" 3>&1 1>&2 2>&3)
   fqdn=$(whiptail --inputbox "Server FQDN (i.e. mc.example.com):" 8 39 --title "New Server" 3>&1 1>&2 2>&3)
   toml_edit "$config" set "servers.$name" string "$ip"
-  toml_edit "$config" set "forced-hosts.'${fqdn/./\\./}'" array "$name"
+  toml_edit "$config" set "forced-hosts.'${fqdn//./\\./}'" array "$name"
   servers+=("$name" "$fqdn" "OFF")
 done
 
@@ -205,5 +209,6 @@ echo "✅ Setup complete! For manual updates to the server configuration, please
 if [ "${#servers[@]}" -gt "0" ]; then
   if whiptail --title "Set Default Host?" --yesno "Do you want to set a new default host?" 10 30; then
     toml_edit "$config" set "servers.try" array "${whiptail --title "Set Default Host?" --radiolist "Choose a default host:" 18 70 "$(( ${#servers[@]} / 3 ))" "${servers[@]}" 3>&1 1>&2 2>&3}"
+  fi
   systemctl restart velocity
 fi
