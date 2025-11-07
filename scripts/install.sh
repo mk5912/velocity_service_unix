@@ -146,7 +146,6 @@ declare -A VELOCITY_PLUGINS=(
   ["ViaRewind"]=$(get_github_release "ViaVersion" "ViaRewind")
   ["LuckPerms"]="https://download.luckperms.net/latest/velocity"
   ["MiniMOTD"]="https://api.papermc.io/v2/projects/minimotd/versions/latest/builds/latest/downloads/MiniMOTD-Velocity.jar"
-  ["CommandAliases"]=$(get_github_release "VelocityPowered" "CommandAliases")
   ["GeyserMC"]="https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/velocity"
   ["Floodgate"]="https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/velocity"
 )
@@ -160,7 +159,6 @@ show_checklist() {
     "ViaRewind" "Optional addon for older versions" OFF \
     "MiniMOTD" "Fancy join/leave messages" OFF \
     "LuckPerms" "Advanced permissions plugin" OFF \
-    "CommandAliases" "Simplify or remap commands" OFF \
     "GeyserMC" "Enables Bedrock support for Java" ON \
     "Floodgate" "GeyserMC plugin - link Bedrock & Java accounts" ON \
     3>&1 1>&2 2>&3
