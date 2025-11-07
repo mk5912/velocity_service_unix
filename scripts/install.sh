@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+arg=.$1
+
 set -euo pipefail
 
 # --- Get architecture ---
@@ -21,6 +23,25 @@ BIN_DIR="/usr/local/bin"
 
 config="$ROOT_DIR/velocity.toml"
 
+
+
+uninstall() {
+  if [ -d "$ROOT_DIR" ]; then
+    rm -r $ROOT_DIR
+  fi
+  if [ -f "$SYSD_DIR/velocity.service" ]; then
+    systemctl stop velocity&&systemctl disable velocity>/dev/null&&rm "$SYSD_DIR/velocity.service"
+  fi
+}
+
+if [ "$arg" = ".remove" ]; then
+  uninstall && echo "Velocity has been successfully removed from your system!" && exit 0
+fi
+
+if [ "$arg" = ".reinstall" ]; then
+  uninstall
+fi
+
 if [ ! -f "$SYSD_DIR/velocity.service" ]; then
 
   # --- SystemD Checker ---
@@ -33,7 +54,12 @@ if [ ! -f "$SYSD_DIR/velocity.service" ]; then
   echo "Installing dependancies!"
 
   apt install curl whiptail jq -y
-  (apt install openjdk-21 -y)||(apt install extrepo -y&&extrepo enable zulu-openjdk&&apt update&&apt install zulu21-jdk)||echo "Java Install Failed With Error: $?"&&exit 15
+  if [ ! apt install openjdk-21 -y>/dev/null ]; then
+    if [ ! apt install extrepo -y>/dev/null&&extrepo enable zulu-openjdk>/dev/null&&apt update>/dev/null&&apt install zulu21-jdk>/dev/null ]; then
+      echo "Java Install Failed!"
+      exit 15
+    fi
+  fi
 
   # --- File System Setup ---
   echo "Setting up file system!"
@@ -184,9 +210,7 @@ read -r -a PLUGINS <<< "${CHOICES//\"/}"
 if [ ! "$(systemctl show -p ActiveState --value velocity)" = "active" ]; then
   echo "Starting the Velocity service!"
 
-  systemctl enable velocity
-
-  systemctl start velocity
+  systemctl enable velocity &&  systemctl start velocity
 else
   echo "Restarting the Velocity service!"
 
@@ -202,13 +226,15 @@ while whiptail --title "Velocity Setup" --yesno "Add A New Local Server Host?" 1
   toml_edit "$config" set "servers.$name" string "$ip"
   toml_edit "$config" set "forced-hosts.'${fqdn//./\\./}'" array "$name"
   servers+=("$name" "$fqdn" "OFF")
+  echo "$servers">debug.txt
 done
-
-echo "✅ Setup complete! For manual updates to the server configuration, please edit $config!"
 
 if [ "${#servers[@]}" -gt "0" ]; then
   if whiptail --title "Set Default Host?" --yesno "Do you want to set a new default host?" 10 30; then
-    toml_edit "$config" set "servers.try" array "${whiptail --title "Set Default Host?" --radiolist "Choose a default host:" 18 70 "$(( ${#servers[@]} / 3 ))" "${servers[@]}" 3>&1 1>&2 2>&3}"
+    DEFAULT_HOST=$(whiptail --title "Set Default Host?" --radiolist "Choose a default host:" 18 70 $(( ${#servers[@]} / 3 )) "${servers[@]}" 3>&1 1>&2 2>&3)
+    toml_edit "$config" set "servers.try" array "[$DEFAULT_HOST]"
   fi
   systemctl restart velocity
 fi
+
+echo "✅ Setup complete! For manual updates to the server configuration, please edit $config!"
