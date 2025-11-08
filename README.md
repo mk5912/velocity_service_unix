@@ -27,7 +27,7 @@ then
    ```
 and finish with
    ```
-   sudo ./install.sh||sudo bash install.sh
+   sudo . install.sh||sudo bash install.sh
    ```
 
   
