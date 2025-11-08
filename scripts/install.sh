@@ -208,7 +208,7 @@ read -r -a PLUGINS <<< "${CHOICES//\"/}"
   echo "XXX"
 } | whiptail --title "Installing Plugins" --gauge "Preparing downloads..." 8 70 0
 
-if [ ! "${#plugins[@]}" -gt "0" ]; then
+if [ ! "${plugins[@]}" -gt "0" ]; then
 
   echo "🔌 Applying Plugins to the Velocity service!"
 
