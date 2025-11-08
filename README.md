@@ -27,7 +27,7 @@ sudo chmod +x install.sh
 ```
 and finish with
 ``` bash
-sudo ./install.sh||sudo bash install.sh
+sudo . install.sh||sudo bash install.sh
 ```
 
 ## Uninstall
