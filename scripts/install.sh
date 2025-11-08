@@ -64,7 +64,7 @@ if [ ! -f "$SYSD_DIR/velocity.service" ]; then
   # --- File System Setup ---
   echo "Setting up file system!"
 
-  URL="https://raw.githubusercontent.com/mk5912/velocity_service_unix/refs/heads/DEV/scripts"
+  URL="https://raw.githubusercontent.com/mk5912/velocity_service_unix/refs/heads/main/scripts"
 
 
   if [ ! -d $ROOT_DIR ]; then
