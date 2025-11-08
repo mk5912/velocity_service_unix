@@ -38,17 +38,23 @@ and finish with
 To uninstall this service you must run the below commands either as root or with sudo access, the commands must be run in order.
 ### WARNING running these commands will completely remove the velocity server and it's files, should you wish to keep any config file please navigate the file system to remove only what you don't want.
 
-   ```
-   systemctl stop velocity
-   ```
+``` bash
+systemctl stop velocity
+```
 then
-   ```
-   systemctl disable velocity
-   ```
-and finally
-   ```
-   rm -r /etc/velocity /etc/systemd/system/velocity.service
-   ```
+``` bash
+systemctl disable velocity
+```
+followed by
+``` bash
+rm -r /etc/velocity /etc/systemd/system/velocity.service
+```
+with the final command to remove the service fully being
+``` bash
+systemctl daemon-reload
+```
+
+An alternative method is to run the install script with the argument `remove` to completely wipe the service from the system, or `reinstall` to wipe velocity from the system and run the installer straight after, doing this via an SSH session may result in the SSH connection being reset due to the command `systemctl daemon-reload` affecting the SSH service.
   
 ## Contributing
 
