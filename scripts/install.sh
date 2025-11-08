@@ -24,13 +24,13 @@ BIN_DIR="/usr/local/bin"
 config="$ROOT_DIR/velocity.toml"
 
 
-
+# --- Function to remove all velocity service files ---
 uninstall() {
   if [ -d "$ROOT_DIR" ]; then
     rm -r $ROOT_DIR
   fi
   if [ -f "$SYSD_DIR/velocity.service" ]; then
-    systemctl stop velocity&&systemctl disable velocity>/dev/null&&rm "$SYSD_DIR/velocity.service"
+    systemctl stop velocity&&systemctl disable velocity>/dev/null&&rm "$SYSD_DIR/velocity.service"&&systemctl daemon-reload
   fi
 }
 
@@ -205,12 +205,9 @@ read -r -a PLUGINS <<< "${CHOICES//\"/}"
   echo "XXX"
 } | whiptail --title "Installing Plugins" --gauge "Preparing downloads..." 8 70 0
 
-if [ ! "$(systemctl show -p ActiveState --value velocity)" = "active" ]; then
-  echo "Starting the Velocity service!"
+if [ ! "${#plugins[@]}" -gt "0" ]; then
 
-  systemctl enable velocity &&  systemctl start velocity
-else
-  echo "Restarting the Velocity service!"
+  echo "Applying Plugins to the Velocity service!"
 
   systemctl restart velocity
 fi
@@ -229,8 +226,12 @@ done
 
 if [ "${#servers[@]}" -gt "0" ]; then
   if whiptail --title "Set Default Host?" --yesno "Do you want to set a new default host?" 10 30; then
-    DEFAULT_HOST=$(whiptail --title "Set Default Host?" --radiolist "Choose a default host:" 18 70 $(( ${#servers[@]} / 3 )) "${servers[@]}" 3>&1 1>&2 2>&3)
-    toml_edit "$config" set "servers.try" array "[$DEFAULT_HOST]"
+    DEFAULT_HOST=$(whiptail --title "Set Default Host?" --radiolist "Choose a default host:" 18 70 $(( ${#servers[@]} / 3 )) "None" "Have no default host!" ON "${servers[@]}" 3>&1 1>&2 2>&3)
+    if [ "$DEFAULT_HOST" = "None" ]; then
+      toml_edit "$config" clear "servers.try" array
+    else
+      toml_edit "$config" set "servers.try" array "[$DEFAULT_HOST]"
+    fi
   fi
   systemctl restart velocity
 fi
