@@ -34,13 +34,12 @@ uninstall() {
   fi
 }
 
-if [ "$arg" = ".remove" ]; then
-  uninstall && echo "Velocity has been successfully removed from your system!" && exit 0
-fi
-
-if [ "$arg" = ".reinstall" ]; then
-  uninstall
-fi
+case "$arg" in
+  ".remove");
+    uninstall && echo "Velocity has been successfully removed from your system!" && exit 0;;
+  ".reinstall");
+    uninstall;;
+esac
 
 if [ ! -f "$SYSD_DIR/velocity.service" ]; then
 
