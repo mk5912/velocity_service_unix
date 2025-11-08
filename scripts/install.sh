@@ -46,12 +46,12 @@ if [ ! -f "$SYSD_DIR/velocity.service" ]; then
 
   # --- SystemD Checker ---
   if [ ! -d "$SYSD_DIR" ]; then
-    echo "Please install systemd for service management!"
+    echo "🪦 Please install systemd for service management!"
     exit 1
   fi
 
   # --- Installing dependencies required for the rest of the script ---
-  echo "Installing dependancies!"
+  echo "🌐 Installing dependancies!"
 
   apt install curl whiptail jq -y
   if [ ! apt install openjdk-21 -y>/dev/null ]; then
@@ -62,7 +62,7 @@ if [ ! -f "$SYSD_DIR/velocity.service" ]; then
   fi
 
   # --- File System Setup ---
-  echo "Setting up file system!"
+  echo "📂 Setting up file system!"
 
   URL="https://raw.githubusercontent.com/mk5912/velocity_service_unix/refs/heads/main/scripts"
 
@@ -71,16 +71,20 @@ if [ ! -f "$SYSD_DIR/velocity.service" ]; then
     mkdir $ROOT_DIR
   fi
 
-  echo "Getting Velocity updater!"
+  echo "📥 Getting Velocity updater!"
   curl "$URL/update_velocity.sh">"$ROOT_DIR/update_velocity.sh"
 
   chmod +x "$ROOT_DIR/update_velocity.sh"
 
-  echo "Getting Velocity service file!"
+  echo "📥 Getting Velocity service file!"
   curl "$URL/velocity.service">"$SYSD_DIR/velocity.service"
 
   echo "Reloading services!"
   systemctl daemon-reload
+
+  systemctl enable velocity
+
+  systemctl start velocity
 
 fi
 
@@ -207,7 +211,7 @@ read -r -a PLUGINS <<< "${CHOICES//\"/}"
 
 if [ ! "${#plugins[@]}" -gt "0" ]; then
 
-  echo "Applying Plugins to the Velocity service!"
+  echo "🔌 Applying Plugins to the Velocity service!"
 
   systemctl restart velocity
 fi
@@ -221,7 +225,6 @@ while whiptail --title "Velocity Setup" --yesno "Add A New Local Server Host?" 1
   toml_edit "$config" set "servers.$name" string "$ip"
   toml_edit "$config" set "forced-hosts.'${fqdn//./\\./}'" array "$name"
   servers+=("$name" "$fqdn" "OFF")
-  echo "$servers">debug.txt
 done
 
 if [ "${#servers[@]}" -gt "0" ]; then
@@ -233,6 +236,8 @@ if [ "${#servers[@]}" -gt "0" ]; then
       toml_edit "$config" set "servers.try" array "[$DEFAULT_HOST]"
     fi
   fi
+
+  echo "🛠️ Applying server settings!"
   systemctl restart velocity
 fi
 
