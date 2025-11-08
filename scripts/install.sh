@@ -35,9 +35,9 @@ uninstall() {
 }
 
 case "$arg" in
-  ".remove");
+  ".remove")
     uninstall && echo "Velocity has been successfully removed from your system!" && exit 0;;
-  ".reinstall");
+  ".reinstall")
     uninstall;;
 esac
 
