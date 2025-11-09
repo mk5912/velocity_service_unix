@@ -74,12 +74,12 @@ if [ ! -f "$SYSD_DIR/velocity.service" ]; then
   fi
 
   echo "📥 Getting Velocity updater!"
-  curl "$URL/update_velocity.sh">"$ROOT_DIR/update_velocity.sh"
+  curl -fsSL "$URL/update_velocity.sh">"$ROOT_DIR/update_velocity.sh"
 
   chmod +x "$ROOT_DIR/update_velocity.sh"
 
   echo "📥 Getting Velocity service file!"
-  curl "$URL/velocity.service">"$SYSD_DIR/velocity.service"
+  curl -fsSL "$URL/velocity.service">"$SYSD_DIR/velocity.service"
 
   echo "Reloading services!"
   systemctl daemon-reload
