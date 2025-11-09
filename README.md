@@ -34,6 +34,7 @@ sudo ./install.sh||sudo bash install.sh
 To uninstall this service you must run the below commands either as root or with sudo access, the commands must be run in order.
 ### WARNING running these commands will completely remove the velocity server and it's files, should you wish to keep any config file please navigate the file system to remove only what you don't want or backup to the home directory.
 
+### Method 1
 ``` bash
 sudo systemctl stop velocity
 ```
@@ -54,11 +55,11 @@ An alternative method is to run the install script with the argument `remove` to
 
 Replace `$arg` with the argument which you want to use.
 
-### Method 3
+### Method 2a
 ``` bash
 sudo curl -sSL https://raw.githubusercontent.com/mk5912/velocity_service_unix/refs/heads/DEV/scripts/install.sh | bash $arg 
 ```
-### Method 4
+### Method 2b
 ``` bash
 sudo ./install.sh $arg||sudo bash ./install.sh $arg
 ```
