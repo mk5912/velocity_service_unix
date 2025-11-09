@@ -57,7 +57,7 @@ if [ ! -f "$SYSD_DIR/velocity.service" ]; then
     exit 15
   fi
   if ! apt install openjdk-21 -y 2>&1; then
-    if ! $(apt install extrepo -y&&extrepo enable zulu-openjdk&&apt update&&apt install zulu21-jdk) 2>&1; then
+    if ! $(apt install extrepo -y&&extrepo enable zulu-openjdk&&apt update&&apt install zulu21-jdk -y) 2>&1; then
       echo "❌ Dependancies Failed To Install!"
       exit 15
     fi
