@@ -11,7 +11,7 @@ efficiently, designed for scalability and stability. This setup service has been
 Run the below command
 
 ``` bash
-sudo curl -fsSL https://raw.githubusercontent.com/mk5912/velocity_service_unix/refs/heads/DEV/scripts/install.sh | sudo bash
+sudo curl -fsSL https://raw.githubusercontent.com/mk5912/velocity_service_unix/refs/heads/main/scripts/install.sh | sudo bash
 ```
   
 
@@ -19,7 +19,7 @@ sudo curl -fsSL https://raw.githubusercontent.com/mk5912/velocity_service_unix/r
 Run the below commands:   
 
 ``` bash
-sudo wget https://raw.githubusercontent.com/mk5912/velocity_service_unix/refs/heads/DEV/scripts/install.sh
+sudo wget https://raw.githubusercontent.com/mk5912/velocity_service_unix/refs/heads/main/scripts/install.sh
 ```
 then
 ``` bash
@@ -57,7 +57,7 @@ Replace `$arg` with the argument which you want to use.
 
 ### Method 2a
 ``` bash
-sudo curl -sSL https://raw.githubusercontent.com/mk5912/velocity_service_unix/refs/heads/DEV/scripts/install.sh | bash $arg 
+sudo curl -sSL https://raw.githubusercontent.com/mk5912/velocity_service_unix/refs/heads/main/scripts/install.sh | bash $arg 
 ```
 ### Method 2b
 ``` bash
