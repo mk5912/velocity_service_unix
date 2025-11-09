@@ -7,7 +7,7 @@ set -euo pipefail
 # --- Get architecture ---
 get_arch() {
   arch=$(uname -m)
-  if [ [ "$arch" = "aarch64" ] || [ "$arch" = "arm64" ] ]; then
+  if [ "$arch" = "aarch64" ] || [ "$arch" = "arm64" ]; then
     arch=arm64
   elif [ "$arch" = "x86_64" ]; then
     arch=amd64
@@ -57,7 +57,7 @@ if [ ! -f "$SYSD_DIR/velocity.service" ]; then
     exit 15
   fi
   if ! apt install openjdk-21 -y 2>&1; then
-    if ! $(apt install extrepo -y&&extrepo enable zulu-openjdk&&apt update&&apt install zulu21-jdk -y) 2>&1; then
+    if ! apt install extrepo -y&&extrepo enable zulu-openjdk&&apt update&&apt install zulu21-jdk -y 2>&1; then
       echo "❌ Dependancies Failed To Install!"
       exit 15
     fi
