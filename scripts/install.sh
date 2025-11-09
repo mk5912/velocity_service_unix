@@ -52,10 +52,12 @@ if [ ! -f "$SYSD_DIR/velocity.service" ]; then
   # --- Installing dependencies required for the rest of the script ---
   echo "🌐 Installing dependancies!"
 
-  apt install curl whiptail jq -y
-  if [ ! apt install openjdk-21 -y>/dev/null ]; then
-    if [ ! apt install extrepo -y>/dev/null&&extrepo enable zulu-openjdk>/dev/null&&apt update>/dev/null&&apt install zulu21-jdk>/dev/null ]; then
-      echo "Java Install Failed!"
+  if ! apt install curl whiptail jq -y 2>&1; then
+    echo "❌ Dependancies Failed To Install!"
+    exit 15
+  if ! apt install openjdk-21 -y 2>&1; then
+    if ! $(apt install extrepo -y&&extrepo enable zulu-openjdk&&apt update&&apt install zulu21-jdk) 2>&1; then
+      echo "❌ Dependancies Failed To Install!"
       exit 15
     fi
   fi
