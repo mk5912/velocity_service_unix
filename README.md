@@ -11,7 +11,7 @@ efficiently, designed for scalability and stability. This setup service has been
 Run the below command
 
 ``` bash
-curl https://raw.githubusercontent.com/mk5912/velocity_service_unix/refs/heads/main/scripts/install.sh | sudo bash
+curl https://raw.githubusercontent.com/mk5912/velocity_service_unix/refs/heads/DEV/scripts/install.sh | sudo bash
 ```
   
 
@@ -19,7 +19,7 @@ curl https://raw.githubusercontent.com/mk5912/velocity_service_unix/refs/heads/m
 Run the below commands:   
 
 ``` bash
-wget https://raw.githubusercontent.com/mk5912/velocity_service_unix/refs/heads/main/scripts/install.sh
+wget https://raw.githubusercontent.com/mk5912/velocity_service_unix/refs/heads/DEV/scripts/install.sh
 ```
 then
 ``` bash
@@ -27,7 +27,7 @@ sudo chmod +x install.sh
 ```
 and finish with
 ``` bash
-sudo . install.sh||sudo bash install.sh
+sudo ./install.sh||sudo bash install.sh
 ```
 
 ## Uninstall
