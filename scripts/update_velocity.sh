@@ -5,10 +5,9 @@
 # Automatically download and replace velocity.jar with the latest Velocity proxy build.
 # Requirements: curl + jq
 
-set -euo
+set -euo pipefail
 
-PROJECT="velocity"
-API_BASE="https://api.papermc.io/v2/projects/${PROJECT}"
+API_BASE="https://api.papermc.io/v2/projects/velocity"
 OUTPUT_FILE="velocity.jar"
 USER_AGENT="Velocity_Service_Updater"  # optional but polite
 

@@ -1,24 +1,67 @@
 #!/usr/bin/env bash
 
+arg=.$1
+
 set -euo pipefail
+
+# --- Get architecture ---
+get_arch() {
+  arch=$(uname -m)
+  if [ [ "$arch" = "aarch64" ] || [ "$arch" = "arm64" ] ]; then
+    arch=arm64
+  elif [ "$arch" = "x86_64" ]; then
+    arch=amd64
+  fi
+  echo $arch
+}
 
 ROOT_DIR="/etc/velocity"
 
-if [ ! -f "/etc/systemd/system/velocity.service" ]; then
+SYSD_DIR="/etc/systemd/system"
+
+BIN_DIR="/usr/local/bin"
+
+config="$ROOT_DIR/velocity.toml"
+
+
+# --- Function to remove all velocity service files ---
+uninstall() {
+  if [ -d "$ROOT_DIR" ]; then
+    rm -r $ROOT_DIR
+  fi
+  if [ -f "$SYSD_DIR/velocity.service" ]; then
+    systemctl stop velocity&&systemctl disable velocity>/dev/null&&rm "$SYSD_DIR/velocity.service"&&systemctl daemon-reload
+  fi
+}
+
+case "$arg" in
+  ".remove")
+    uninstall && echo "Velocity has been successfully removed from your system!" && exit 0;;
+  ".reinstall")
+    uninstall;;
+esac
+
+if [ ! -f "$SYSD_DIR/velocity.service" ]; then
 
   # --- SystemD Checker ---
-  if [ ! -d "/etc/systemd/system" ]; then
-    echo "Please install systemd for service management!"
+  if [ ! -d "$SYSD_DIR" ]; then
+    echo "🪦 Please install systemd for service management!"
     exit 1
   fi
 
   # --- Installing dependencies required for the rest of the script ---
-  echo "Installing dependancies!"
+  echo "🌐 Installing dependancies!"
 
   apt install curl whiptail jq -y
+  if [ ! apt install openjdk-21 -y>/dev/null ]; then
+    if [ ! apt install extrepo -y>/dev/null&&extrepo enable zulu-openjdk>/dev/null&&apt update>/dev/null&&apt install zulu21-jdk>/dev/null ]; then
+      echo "Java Install Failed!"
+      exit 15
+    fi
+  fi
 
   # --- File System Setup ---
-  echo "Setting up file system!"
+  echo "📂 Setting up file system!"
 
   URL="https://raw.githubusercontent.com/mk5912/velocity_service_unix/refs/heads/main/scripts"
 
@@ -27,18 +70,29 @@ if [ ! -f "/etc/systemd/system/velocity.service" ]; then
     mkdir $ROOT_DIR
   fi
 
-  echo "Getting Velocity updater!"
-  curl "$URL/update_velocity.sh">"/etc/velocity/update_velocity.sh"
+  echo "📥 Getting Velocity updater!"
+  curl "$URL/update_velocity.sh">"$ROOT_DIR/update_velocity.sh"
 
-  chmod +x "/etc/velocity/update_velocity.sh"
+  chmod +x "$ROOT_DIR/update_velocity.sh"
 
-  echo "Getting Velocity service file!"
-  curl "$URL/velocity.service">"/etc/systemd/system/velocity.service"
+  echo "📥 Getting Velocity service file!"
+  curl "$URL/velocity.service">"$SYSD_DIR/velocity.service"
 
   echo "Reloading services!"
   systemctl daemon-reload
 
+  systemctl enable velocity
+
+  systemctl start velocity
+
 fi
+
+# --- Install dasel if not already installed ---
+if [ ! -f "$BIN_DIR/dasel" ]; then
+  curl -sSL "https://github.com/TomWright/dasel/releases/latest/download/dasel_linux_$(get_arch)" -o "$BIN_DIR/dasel"
+  chmod a+x "$BIN_DIR/dasel"
+fi
+
 
 # --- Helper: get download urls for ViaVersion plugins ---
 get_github_release() {
@@ -46,6 +100,37 @@ get_github_release() {
   SLUG=$2
   local URL=$(curl -s -H "User-Agent: Velocity_Service_Installer" "https://api.github.com/repos/$PROJECT/$SLUG/releases/latest"|jq -r ".assets[].browser_download_url")
   echo "$URL"
+}
+
+# --- TOML config editor ---
+toml_edit() {
+
+  set +u
+
+  local file=$1 action=$2 selector=$3 type=$4 value=$5
+
+  case "$action" in
+    "set")
+      if [ "$type" = "array" ]; then
+        dasel put -t yaml -f "$file" -w toml -s "$selector" -v "[$value]"
+      else
+        dasel put -t "$type" -f "$file" -w toml -s "$selector" -v "$value"
+      fi
+      ;;
+    "clear")
+      if [ "$type" = "array" ]; then
+        dasel put -t yaml -f "$file" -w toml -s "$selector" -v "[]"
+      else
+        dasel put -t "$type" -f "$file" -w toml -s "$selector" -v ""
+      fi
+      ;;
+    "delete")
+      dasel delete -f "$file" -w toml -s "$selector"
+      ;;
+  esac
+
+  set -u
+
 }
 
 # Velocity Proxy Plugin Installer Wizard with progress bar
@@ -64,7 +149,6 @@ declare -A VELOCITY_PLUGINS=(
   ["ViaRewind"]=$(get_github_release "ViaVersion" "ViaRewind")
   ["LuckPerms"]="https://download.luckperms.net/latest/velocity"
   ["MiniMOTD"]="https://api.papermc.io/v2/projects/minimotd/versions/latest/builds/latest/downloads/MiniMOTD-Velocity.jar"
-  ["CommandAliases"]=$(get_github_release "VelocityPowered" "CommandAliases")
   ["GeyserMC"]="https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/velocity"
   ["Floodgate"]="https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/velocity"
 )
@@ -78,7 +162,6 @@ show_checklist() {
     "ViaRewind" "Optional addon for older versions" OFF \
     "MiniMOTD" "Fancy join/leave messages" OFF \
     "LuckPerms" "Advanced permissions plugin" OFF \
-    "CommandAliases" "Simplify or remap commands" OFF \
     "GeyserMC" "Enables Bedrock support for Java" ON \
     "Floodgate" "GeyserMC plugin - link Bedrock & Java accounts" ON \
     3>&1 1>&2 2>&3
@@ -94,6 +177,8 @@ if ! whiptail --title "Confirm Installation" \
   echo "❌ Installation cancelled."
   exit 0
 fi
+
+declare -A plugins=()
 
 read -r -a PLUGINS <<< "${CHOICES//\"/}"
 
@@ -113,11 +198,6 @@ read -r -a PLUGINS <<< "${CHOICES//\"/}"
 
     URL="${VELOCITY_PLUGINS[$plugin]}"
 
-    # Expand wildcard if present in URL
-    # if [[ "$URL" == *"*"* ]]; then
-    #   URL=$(curl -s -L "${URL/\*/}" | grep -Eo "https?://[^ \"']+${plugin}[^ \"']+jar" | head -n1 || true)
-    # fi
-
     curl -L -s -o "${PLUGINS_DIR}/${plugin}.jar" "$URL"
 
   done
@@ -130,16 +210,36 @@ read -r -a PLUGINS <<< "${CHOICES//\"/}"
   echo "XXX"
 } | whiptail --title "Installing Plugins" --gauge "Preparing downloads..." 8 70 0
 
-echo "✨ All done! Velocity plugins installed in '${PLUGINS_DIR}/'."
+if [ ! "${#plugins[@]}" -gt "0" ]; then
 
-if [ ! "$(systemctl show -p ActiveState --value velocity)" = "active" ]; then
-  echo "Starting the Velocity service!"
-
-  systemctl enable velocity
-
-  systemctl start velocity
-else
-  echo "Restarting the Velocity service!"
+  echo "🔌 Applying Plugins to the Velocity service!"
 
   systemctl restart velocity
 fi
+
+servers=()
+
+while whiptail --title "Velocity Setup" --yesno "Add A New Local Server Host?" 10 30; do
+  name=$(whiptail --inputbox "Server Name (i.e. Survival)" 8 39 --title "New Server" 3>&1 1>&2 2>&3)
+  ip=$(whiptail --inputbox "Server Local IP Address And Port (xxx.yyy.zzz.qqq:ppppp)" 8 39 --title "New Server" 3>&1 1>&2 2>&3)
+  fqdn=$(whiptail --inputbox "Server FQDN (i.e. mc.example.com):" 8 39 --title "New Server" 3>&1 1>&2 2>&3)
+  toml_edit "$config" set "servers.$name" string "$ip"
+  toml_edit "$config" set "forced-hosts.'${fqdn//./\\./}'" array "$name"
+  servers+=("$name" "$fqdn" "OFF")
+done
+
+if [ "${#servers[@]}" -gt "0" ]; then
+  if whiptail --title "Set Default Host?" --yesno "Do you want to set a new default host?" 10 30; then
+    DEFAULT_HOST=$(whiptail --title "Set Default Host?" --radiolist "Choose a default host:" 18 70 $(( ${#servers[@]} / 3 )) "None" "Have no default host!" ON "${servers[@]}" 3>&1 1>&2 2>&3)
+    if [ "$DEFAULT_HOST" = "None" ]; then
+      toml_edit "$config" clear "servers.try" array
+    else
+      toml_edit "$config" set "servers.try" array "[$DEFAULT_HOST]"
+    fi
+  fi
+
+  echo "🛠️ Applying server settings!"
+  systemctl restart velocity
+fi
+
+echo "✅ Setup complete! For manual updates to the server configuration, please edit $config!"
